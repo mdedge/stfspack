@@ -3,7 +3,7 @@ Title: Functions to Support Statistical Thinking from Scratch
 Version: 0.0.0.9000
 Authors@R: person("Doc", "Edge", email = "medge3@gmail.com", role = c("aut", "cre"))
 Description: Functions to support Statistical Thinking from Scratch: A Primer for Scientists by M.D. Edge. The functions here are included in the main text or exercises of STFS. Most of the functions simulate data in a form requested by the exercises.
-Depends: R (>= 3.5.0)
+Depends: R (>= 3.2.0)
 License: GPL 3
 Encoding: UTF-8
 LazyData: true
