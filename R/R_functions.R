@@ -237,7 +237,6 @@ many.outcome.sim <- function(n, n.meas, correl, n.sims){
     t.st <- (mean(x1) - mean(x2))/sqrt((sd(x1)^2 + sd(x2)^2)/n.1)
     2*pt(-abs(t.st), n.tot - 2)
   }
-  require(MASS)
   #Specify a covariance matrix for mvrnorm().
   sigma <- matrix(correl, nrow = n.meas, ncol = n.meas)
   diag(sigma) <- 1
@@ -415,13 +414,12 @@ perm.samp <- function(x){
 #' @param gamma The slope for the unobserved confounder.
 #' @param d.sd The standard deviation of the disturbances.
 #' @param rho The correlation of (observed) x and (unobserved) z.
-#' @return A list of two matrices, each with nsims rows and n columns. The first matrix contains the x values from each simulation, with one simuluation in each row. The second matrix contains the y values in the same configuration.
+#' @return A list of two matrices. The first matrix contains the x values from each simulation, with one simuluation in each row. The second matrix contains the y values in the same configuration.
 #' @keywords Simulation, simple linear regression, confounding, omitted variable bias.
 #' @export
 #' @examples 
 #' sim.2var(10, 50, 3, 1/2, 1/5, 1, .5)
 sim.2var <- function(n, nsims, alpha, beta, gamma, d.sd, rho){
-  require(MASS)
   sig <- matrix(c(1, rho, rho, 1), nrow = 2)
   ivs <- MASS::mvrnorm(n*nsims, mu = c(0,0), sig)
   x <- ivs[,1]
@@ -430,7 +428,7 @@ sim.2var <- function(n, nsims, alpha, beta, gamma, d.sd, rho){
   y <- alpha + beta * x + gamma * z + disturb
   xmat <- matrix(x, nrow = nsims)
   ymat <- matrix(y, nrow = nsims)
-  cbind(xmat, ymat)
+  list(xmat, ymat)
 }
 
 #' Generate a bootstrap distribution for a statistic computed on a vector.
