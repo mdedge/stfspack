@@ -375,7 +375,7 @@ perm.samp <- function(x){
 #' @param gamma The slope for the unobserved confounder.
 #' @param d.sd The standard deviation of the disturbances.
 #' @param rho The correlation of (observed) x and (unobserved) z.
-#' @return A list of two matrices, each with nsims rows and n columns. The first matrix contains the x values from each simulation, with one simuluation in each row. The second matrix contains the y values in the same configuration.
+#' @return A list of two matrices. The first matrix contains the x values from each simulation, with one simuluation in each row. The second matrix contains the y values in the same configuration.
 #' @keywords Simulation, simple linear regression, confounding, omitted variable bias.
 #' @export
 #' @examples 
@@ -389,7 +389,7 @@ sim.2var <- function(n, nsims, alpha, beta, gamma, d.sd, rho){
   y <- alpha + beta * x + gamma * z + disturb
   xmat <- matrix(x, nrow = nsims)
   ymat <- matrix(y, nrow = nsims)
-  cbind(xmat, ymat)
+  list(xmat, ymat)
 }
 
 #' Generate a bootstrap distribution for a statistic computed on a vector.
