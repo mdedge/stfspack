@@ -314,6 +314,45 @@ ps.1sz <- function(d, n, level = 0.05, nsim = 10000){
   mean(ps < level)
 }
 
+
+#' Simulate the winner's curse with a one-sample z-test
+#' 
+#' Simulates the "winner's curse"---the effect that especially in low-power situations, estimates that result in signficant tests for the null hypothesis of theta = 0 tend also to be overestimates. In each simulation, a single normal sample is drawn and the hypothesis that the true effect size is zero is tested(by one-sample t-test). The output is a named vector with a a true effect size (measured in number of standard deviations from the value under the null hypothesis), the "estimated" effect size, which is the mean effect size from simulations that produced significant results, and the power, which is the proportion of simulations that achieved significance. A histogram is also produced, with all the estimated effect sizes shown, and the estimates associated with significant tests colored grey.
+#' @param d The true effect size in the simulations.
+#' @param n The size of each simulated sample.
+#' @param lev The significance level of the one-sample z-test. Effect size estimates are averaged in the "estimated d" part of the output only if the one-sample z test produces a p value less than the level.
+#' @param nsim The number of simulated samples to run.
+#' @param abs.vals controls whether we pay attention to the sign of the estimate (if FALSE, the default, we do).
+#' @param br the breaks parameter for the histogram.
+#' @return a named vector with a a true effect size (measured in number of standard deviations from the value under the null hypothesis), the "estimated" effect size, which is the mean effect size from simulations that produced significant results, and the power, which is the proportion of simulations that achieved significance. A histogram is also produced, with all the estimated effect sizes shown, and the estimates associated with significant tests colored grey.
+#' @keywords simulation, power, z test, winner's curse
+#' @export
+#' @examples 
+#' wc.1sz(d = 0.5, n = 20, nsim = 1000)
+wc.1sz <- function(d, n, lev = 0.05, nsim = 10000, abs.vals = FALSE, br = 50){
+  samps <- rnorm(n*nsim, d, 1)
+  simmat <- matrix(samps, nrow = nsim)
+  samp.means <- rowMeans(simmat)
+  neg.devs <- -abs(samp.means)
+  ps <- 2*pnorm(neg.devs, 0, 1/sqrt(n))
+  power <- mean(ps < lev)
+  if(abs.vals == TRUE){
+    ests.out <- abs(samp.means)
+  }
+  if(abs.vals == FALSE){
+    ests.out <- samp.means
+  }
+  est.d <- mean(ests.out[ps < lev])
+  cut.xbar.n <- qnorm(lev/2, 0, 1/sqrt(n))
+  h <- hist(ests.out, breaks = br)
+  cuts <- cut(h$breaks, c(-Inf, cut.xbar.n, -cut.xbar.n, Inf))
+  plot(h, col = c("grey", "white", "grey")[cuts], xlab = "Estimated effect sizes", main = "")
+  return(c("true d" = d, "estimated d" = est.d, "power" = power))
+}
+
+
+
+
 #' Draw a bootstrap sample from a matrix or vector
 #' 
 #' Given a matrix with n rows (or a vector of length n), samples n rows with replacement from the original matrix.
