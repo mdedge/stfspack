@@ -5,7 +5,7 @@
 \title{Simulate simple linear regression data and apply a Wald test}
 \usage{
 sim.Wald.B(n, nsim, a, b, B0 = 0, sigma.disturb = 1, mu.x = 8,
-  sigma.x = 4, rdisturb = rnorm, rx = rnorm, het.coef = 0,
+  sigma.x = 2, rdisturb = rnorm, rx = rnorm, het.coef = 0,
   pfun = pnorm, ...)
 }
 \arguments{

@@ -461,7 +461,7 @@ sim.lm.ests <- function(n, nsim, a, b, sigma.disturb = 1, mu.x = 8, sigma.x = 2,
 #' ps <- sim.perm.B(10, 200, a = 3, b = .1, nperm = 200)
 #' mean(ps < .05) #power at .05 significance level
 sim.perm.B <- function(n, nsim, a, b, nperm = 500, sigma.disturb = 1, 
-                           mu.x = 8, sigma.x = 4, rdisturb = rnorm, rx = rnorm, het.coef = 0){
+                           mu.x = 8, sigma.x = 2, rdisturb = rnorm, rx = rnorm, het.coef = 0){
   #This version differs from the one in the text and is about twice as fast.
   #simulate all data
   dat <- sim.lm(n*nsim, a, b, sigma.disturb, mu.x, sigma.x, rdisturb, rx, het.coef)[sample(1:(n*nsim)),]
@@ -511,7 +511,7 @@ sim.perm.B <- function(n, nsim, a, b, nperm = 500, sigma.disturb = 1,
 #' @examples 
 #' sim.Wald.B(10, 100, 3, .1)
 sim.Wald.B <- function(n, nsim, a, b, B0 = 0, sigma.disturb = 1, 
-                       mu.x = 8, sigma.x = 4, rdisturb = rnorm, rx = rnorm, het.coef = 0, pfun = pnorm, ...){
+                       mu.x = 8, sigma.x = 2, rdisturb = rnorm, rx = rnorm, het.coef = 0, pfun = pnorm, ...){
   #Initialize variables.
   ps <- numeric(nsim)
   for(i in 1:nsim){

@@ -5,7 +5,7 @@
 \title{Simulate simple linear regression data and apply a permutation test}
 \usage{
 sim.perm.B(n, nsim, a, b, nperm = 500, sigma.disturb = 1, mu.x = 8,
-  sigma.x = 4, rdisturb = rnorm, rx = rnorm, het.coef = 0)
+  sigma.x = 2, rdisturb = rnorm, rx = rnorm, het.coef = 0)
 }
 \arguments{
 \item{n}{The number of pairs of observations to simulate.}
