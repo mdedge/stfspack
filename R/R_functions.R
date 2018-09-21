@@ -2,28 +2,27 @@
 #Functions used in the main text or exercises of
 #Statistical Thinking from Scratch.
 
-#Install (if necessary) and load all packages used in the book's code.
-#if(!("MASS" %in% installed.packages())){install.packages("MASS")}
-#library(MASS)
 
 #' Simulate and plot the distribution of the sample mean
 #' 
 #' Simulates a specified number of samples of a specified size from the beta distribution and plots the distribution of sample means with the density of an approximating normal distribution overlaid.
-#' @param samp.size The size of each simulated sample.
-#' @param n.samps The number of samples to simulate.
+#' @param n The size of each simulated sample.
+#' @param nsim The number of samples to simulate.
 #' @param shape1 The first parameter of the beta distribution from which the samples will be drawn.
 #' @param shape2 The second parameter of the beta distribution.
+#' @return A named vector with the mean, standard deviation, and variance of the distribution of sample means. Also plots a histogram of the distribution of sample means with an approximating normal distribution overlaid.
 #' @keywords sample mean, law of large numbers, central limit theorem, distribution of the sample mean
 #' @export
 #' @examples 
 #' dosm.beta.hist(25, 1000, 2, 2) 
-dosm.beta.hist <- function(samp.size, n.samps, shape1 = 1, shape2 = 1, ...){
-  samps <- rbeta(samp.size*n.samps, shape1, shape2)
-  sim.mat <- matrix(samps, nrow = n.samps)
+dosm.beta.hist <- function(n, nsim, shape1 = 1, shape2 = 1, ...){
+  samps <- rbeta(n*nsim, shape1, shape2)
+  sim.mat <- matrix(samps, nrow = nsim)
   dosm <- rowMeans(sim.mat)
   hist(dosm, freq=FALSE, ...)#freq=FALSE re-scales the height
   x <- seq(0,1,length.out = 1000)
   lines(x, dnorm(x, mean = mean(dosm), sd = sd(dosm)))
+  c("mean of DOSM" = mean(dosm), "SD of DOSM" = sd(dosm), "var of DOSM" = var(dosm))
 }
 
 
@@ -37,7 +36,7 @@ dosm.beta.hist <- function(samp.size, n.samps, shape1 = 1, shape2 = 1, ...){
 #' @keywords simulated data, Pareto
 #' @export
 #' @examples 
-#' rpareto(100, 0.5, 1)
+#' rpareto(50, 0.5, 1)
 rpareto <- function(n, a=0.5, b=1){
   qpareto <- function(u, a=0.5, b=1){b/(1-u)^(1/a)}
   qpareto(runif(n),a,b)
@@ -50,144 +49,82 @@ rpareto <- function(n, a=0.5, b=1){
 #' Compares the proportion of observations in a vector beyond k standard deviations to the expectation under a normal distribution. The output is a ratio of the proportion of data beyond k standard deviations from the expectation divided by the Normal-theory probability of observations beyond k standard deviations from the expectation.
 #' @param x A numeric vector
 #' @param k The number of standard deviations beyond which is considered the "tail" (for the purpose of the computation)
-#' @param expec The expectation of a normal distribution to which x will be compared
-#' @param st.d The standard deviation of a normal distribution to which x will be compared
+#' @param mu The expectation of a normal distribution to which x will be compared
+#' @param sigma The standard deviation of a normal distribution to which x will be compared
 #' @return A ratio of the proportion of data beyond k standard deviations from the expectation divided by the Normal-theory probability of observations beyond k standard deviations from the expectation.
 #' @keywords extreme observations, central limit theorem
 #' @export
 #' @examples 
 #' compare.tail.to.normal(rnorm(10000, 0, 1), 3, 0, 1)
-compare.tail.to.normal <- function(x, k, expec, st.d){
-  mean(x < (expec - k* st.d) | x > (expec + k* st.d))/(1 - (pnorm(k) - pnorm(-k)))
+#' compare.tail.to.normal(rt(10000, 2), 3, 0, 1)
+compare.tail.to.normal <- function(x, k, mu, sigma){
+  mean(x < (mu - k* sigma) | x > (mu + k* sigma))/(1 - (pnorm(k) - pnorm(-k)))
 }
 
 #' Simulate data from a simple linear model.
 #' 
 #' Generates one set of n independent pairs of observations using a simple linear model (y = a + b*x + disturbance) with intercept a, slope b, and (by default) normally distributed disturbances. The output is a matrix with x in the first column and y in the second column. The output matrix is sorted by the x values, with the lowest x value in the first row.
+#' @param n The number of pairs of observations to simulate.
 #' @param a The intercept parameter of the linear regression model to be simulated.
 #' @param b The slope parameter of the linear regression model to be simulated.
-#' @param var.eps The variance of the disturbances in the model y = a + b*x + disturbance.
-#' @param n The number of pairs of observations to simulate.
+#' @param sigma.disturb The variance of the disturbances in the model y = a + b*x + disturbance.
 #' @param mu.x The expectation of the x values.
-#' @param var.x The variance of the x values.
+#' @param sigma.x The variance of the x values.
+#' @param rdisturb A function for drawing the random disturbances. rnorm() is the default, which makes the disturbances normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.
 #' @param rx A function for drawing the random x values. rnorm() is the default, which makes x normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.
-#' @param rdist A function for drawing the random disturbances. rnorm() is the default, which makes the disturbances normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.
+#' @param het.coef A number introducing some heteroscedasticity (i.e. non-constant variance) to the disturbances. If het.coef = 0 (the default), then the disturbances have constant variance. If it is positive, then the standard deviation of the disturbances increases with x; if negative, then the standard deviation of the disturbances decreases with x.
 #' @return A matrix with n rows, x in the first column and y in the second column. The output matrix is sorted by the x values, with the lowest x value in the first row.
 #' @keywords Simulation, simple linear regression
 #' @export
 #' @examples 
-#' sim.lm(a = 3, b = 1/2, n = 11)
-sim.lm <- function(a, b, var.eps = 1, n = 50, mu.x = 8, var.x = 4, rx = rnorm, rdist = rnorm){
-  x <- sort(rx(n, mu.x, sqrt(var.x)))
-  disturbs <- rdist(n, 0, sqrt(var.eps))
+#' sim.lm(n = 11, a = 3, b = 1/2)
+#' plot(sim.lm(1000, 3, 1/2))
+#' plot(sim.lm(1000, 3, 1/2, rdisturb = rlaplace))
+#' plot(sim.lm(1000, 3, 1/2, het.coef = .2))
+sim.lm <- function(n, a, b, sigma.disturb = 1, mu.x = 8, sigma.x = 2, rdisturb = rnorm, rx = rnorm, het.coef = 0){
+  x <- sort(rx(n, mu.x, sigma.x))
+  disturbs <- rdisturb(n, 0, sapply(sigma.disturb + scale(x)*het.coef, max, 0))
   y <- a + b*x + disturbs
   cbind(x,y)
 }
 
 
-#' Generate a matrix of samples from a normal distribution.
+#' Generate a matrix of samples from a chosen distribution.
 #' 
-#' Draws normal samples and formats them into a matrix, where each row contains a sample.
-#' @param mu The expectation of the normal distribution from which to draw samples.
-#' @param sigma The standard deviation of the normal distribution from which to draw samples.
-#' @param n The number of independent observations to include in each sample.
-#' @param nsamps The number of samples to generate.
-#' @return A matrix of independent normally distributed random numbers with nsamps rows and n columns.
-#' @keywords simulation, normal distribution
+#' Draws random data and formats them into a matrix, where each row contains a sample. By default, the random data are drawn form a normal distribution, but the user can supply an alternative.
+#' @param n The number of independent observations to include in each sample (i.e. each row of the output matrix).
+#' @param nsim The number of samples to generate (i.e. the number of rows in the output matrix).
+#' @param rx A function generating random data (rnorm by default).
+#' @param ... Additional arguments to rx.
+#' @return A matrix of independent random numbers with nsim rows and n columns.
+#' @keywords simulation, samples, matrix
 #' @export
 #' @examples 
-#' norm.samps(10, 1, 5, 8)
-norm.samps <- function(mu = 0, sigma = 1, n = 25, nsamps = 10000){
-  samps <- rnorm(n*nsamps, mu, sigma)
-  matrix(samps, nrow = nsamps, ncol = n)
+#' mat.samps(3, 5) #data from standard normal
+#' mat.samps(3, 5, mean = 10, sd = 2) #normal with expectation 10 and sd 2.
+#' mat.samps(3, 5, rx = rexp, .1) #exponential with rate .1
+#' mat.samps(3, 5, rx = rnorm.contam, contam.p = .2) #standard normal contaminated with 20% outliers
+mat.samps <- function(n, nsim = 10000, rx = rnorm, ...){
+  samps <- rx(n*nsim, ...)
+  matrix(sample(samps), nrow = nsim, ncol = n) #sample() is there because rnorm.out produces
 }
 
 
 #' Sample from a Laplace (also called double-exponential) distribution
 #' 
-#' Simulates a sample of Laplace-distributed data.
+#' Simulates a sample of Laplace-distributed data. Note that there are other rlaplace() functions (such as in the rmutil package), but their parameters may differ from this one, which uses the expectation and standard deviation (analogous to rnorm()).
 #' @param n The number of independent observations to draw (i.e. sample size).
-#' @param mean The expectation of the Laplace distribution.
-#' @param sd The standard deviation of the Laplace distribution.
+#' @param mu The expectation of the Laplace distribution.
+#' @param sigma The standard deviation of the Laplace distribution.
 #' @return A vector of Laplace-distributed random numbers of length n.
 #' @keywords simulated data, Laplace, double-exponential
 #' @export
 #' @examples 
 #' rlaplace(10, 0, 1)
-rlaplace <- function(n, mean = 0, sd = 1){
+rlaplace <- function(n, mu = 0, sigma = 1){
   exp1 <- rexp(2*n, 1)
   x <- exp1[1:n] - exp1[(n+1):(2*n)]
-  x * sd/sqrt(2) + mean
-}
-
-#' Generate a matrix of samples from a Laplace distribution.
-#' 
-#' Draws Laplace samples and formats them into a matrix, where each row contains a sample.
-#' @param mu The expectation of the Laplace distribution from which to draw samples.
-#' @param sigma The standard deviation of the Laplace distribution from which to draw samples.
-#' @param n The number of independent observations to include in each sample.
-#' @param nsamps The number of samples to generate.
-#' @return A matrix of independent Laplace-distributed random numbers with nsamps rows and n columns.
-#' @keywords simulation, Laplace distribution
-#' @export
-#' @examples 
-#' laplace.samps(10, 1, 5, 8)
-laplace.samps <- function(mu = 0, sigma = 1, n = 25, nsamps = 10000){
-  samps <- rlaplace(n*nsamps, mu, sigma)
-  matrix(samps, nrow = nsamps, ncol = n)
-}
-
-#' A matrix of samples from a Normal distribution with outliers
-#' 
-#' Simulates samples of normally distributed data, each "contaminated" with outliers from a different normal distribution according to a user-specified probability. 
-#' @param nsamps The number of samples to simulate.
-#' @param n The number of independent observations per sample
-#' @param gamma The probability that each observation is from the non-target distribution.
-#' @param theta The expectation of the target distribution.
-#' @param lambda The expectation of the non-target / "contamination" / outlier distribution.
-#' @param targ.sd The standard deviation of the target distribution.
-#' @param out.sd The standard deviation of the outlier distribution.
-#' @return A matrix of independent random numbers with nsamps rows and n columns.
-#' @keywords simulated data, normal distribution, outliers
-#' @export
-#' @examples 
-#' rnorm.out(5, 20, .2, 0, 10)
-rnorm.out <- function(nsamps, n, gamma, theta = 0, lambda = 10, targ.sd = 1, out.sd = 1){
-  n.target <- rbinom(1, n*nsamps, 1-gamma)
-  n.nontarget <- n*nsamps - n.target
-  samp.target <- rnorm(n.target, theta, targ.sd)
-  samp.nontarget <- rnorm(n.nontarget, lambda, out.sd)
-  allsamps <- sample(c(samp.target, samp.nontarget))
-  matrix(allsamps, nrow = n, ncol = nsamps)
-}
-
-
-#' Simulate data from a linear model and estimate the parameters.
-#' 
-#' Simulates data from a linear model using the sim.lm() function, each time estimating the parameters using a user-supplied function.
-#' @param nsims The number of samples to simulate.
-#' @param n The number of pairs of observations to simulate per sample.
-#' @param a The intercept parameter of the linear regression model to be simulated.
-#' @param b The slope parameter of the linear regression model to be simulated.
-#' @param var.eps The variance of the disturbances in the model y = a + b*x + disturbance.
-#' @param mu.x The expectation of the x values.
-#' @param var.x The variance of the x values.
-#' @param rx A function for drawing the random x values. rnorm() is the default, which makes x normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.
-#' @param rdist A function for drawing the random disturbances. rnorm() is the default, which makes the disturbances normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.
-#' @param estfun A function for estimating the parameters. lm() is the default, which gives least-squares estimates. Other functions can be supplied so long as they accept the same formula-style input in the first argument and return a list that has the coefficients stored in a vector of length 2 accessible by $coef. rq() in the quantreg package is another function that works.
-#' @return A matrix with 2 columns and nsamps rows. Each row contains estimation results from a different sample, with the intercept estimate in the first column and the slope estimate in the second column.
-#' @keywords simulated data, simple linear regression
-#' @export
-#' @examples 
-#' sim.lm.ests(10)
-#' sim.lm.ests(10, estfun = rq) #if package quantreg is loaded.
-sim.lm.ests <- function(nsims, n = 50, a = 0, b = 0, var.eps = 1, mu.x = 0, var.x = 1, rx = rnorm, rdist = rnorm, estfun = lm){
-  ests <- matrix(nrow = nsims, ncol = 2)
-  for(i in 1:nsims){
-    dat <- sim.lm(n = n, a = a, b = b, var.eps = var.eps, mu.x = 		mu.x, var.x = var.x, rx = rx, rdist = rdist)
-    ests[i,] <- estfun(dat[,2] ~ dat[,1])$coef
-  }
-  ests
+  x * sigma/sqrt(2) + mu
 }
 
 
@@ -195,35 +132,61 @@ sim.lm.ests <- function(nsims, n = 50, a = 0, b = 0, var.eps = 1, mu.x = 0, var.
 #' 
 #' Simulates a samples of normally distributed data, each "contaminated" with outliers from a different normal distribution according to a user-specified probability. Similar to rnorm.out, except that the order of arguments is different and the output is formatted as a vector.
 #' @param n The number of independent observations per sample
-#' @param mean The expectation of the target distribution.
-#' @param sd The standard deviation of the target distribution.
+#' @param mu The expectation of the target distribution.
+#' @param sigma The standard deviation of the target distribution.
 #' @param contam.p The probability that each observation is from the non-target distribution.
-#' @param contam.mean The expectation of the non-target / "contamination" / outlier distribution.
-#' @param contam.sd The standard deviation of the outlier distribution.
+#' @param contam.mu The expectation of the non-target / "contamination" / outlier distribution.
+#' @param contam.sigma The standard deviation of the outlier distribution.
 #' @return A vector of independent random numbers n entries.
 #' @keywords simulated data, normal distribution, outliers
 #' @export
 #' @examples 
 #' rnorm.mix(20, 0, 1, .2, 10, 1)
-rnorm.mix <- function(n, mean = 0, sd = 1, contam.p = 0.01, contam.mean = -5, contam.sd = 0){
+rnorm.contam <- function(n, mu = 0, sigma = 1, contam.p = 0.01, contam.mu = -5, contam.sigma = 0){
   ncontam <- rbinom(1, n, contam.p)
-  c(rnorm(n - ncontam, mean, sd), rnorm(ncontam, contam.mean, contam.sd))
+  c(rnorm(n - ncontam, mu, sigma), rnorm(ncontam, contam.mu, contam.sigma))
 }
+
+
+
+#' Simulate data from a linear model and estimate the parameters.
+#' 
+#' Simulates data from a linear model using the sim.lm() function, each time estimating the parameters using a user-supplied function.
+#' @inheritParams sim.lm 
+#' @param nsim The number of samples to simulate.
+#' @param estfun A function for estimating the parameters. lm() is the default, which gives least-squares estimates. Other functions can be supplied so long as they accept the same formula-style input in the first argument and return a list that has the coefficients stored in a vector of length 2 accessible by $coef. rq() in the quantreg package is another function that works.
+#' @return A matrix with 2 columns and nsamps rows. Each row contains estimation results from a different sample, with the intercept estimate in the first column and the slope estimate in the second column.
+#' @keywords simulated data, simple linear regression
+#' @export
+#' @examples 
+#' sim.lm.ests(n = 50, nsim = 10, a = 3, b = 1/2)
+#' sim.lm.ests(n = 50, nsim = 10, a = 3, b = 1/2, estfun = rq) #if package quantreg is loaded.
+sim.lm.ests <- function(n, nsim, a, b, sigma.disturb = 1, mu.x = 8, sigma.x = 2, rdisturb = rnorm, rx = rnorm, het.coef = 0, estfun = lm){
+  ests <- matrix(nrow = nsim, ncol = 2)
+  for(i in 1:nsim){
+    dat <- sim.lm(n, a, b, sigma.disturb, mu.x, sigma.x, rdisturb, rx, het.coef)
+    ests[i,] <- estfun(dat[,2] ~ dat[,1])$coef
+  }
+  ests
+}
+
 
 
 #' Simulate a multiple-testing scenario
 #' 
-#' Simulates type I error inflation from multiple testing for a test comparing two group means. The groups are compared on n.meas outcome measurements, each mutually correlated at a user-specified level. A matrix of p values is returned with n.meas columns and n.sims rows.
+#' Simulates type I error inflation from multiple testing for a test comparing two group means. The groups are compared on n.dv outcome measurements, each mutually correlated at a user-specified level. A matrix of p values is returned with n.dv columns and nsim rows.
 #' @param n The number of people measured in each group per simulation.
-#' @param n.meas The number of outcome measurements taken per person.
+#' @param nsim The number of simulated samples to run.
+#' @param n.dv The number of outcome measurements (i.e. dependent variables or DVs) taken per person.
 #' @param correl The correlation of the (normally distributed) outcome measurements---all pairs of measurements have the same correlation.
-#' @param n.sims The number of simulated samples to run.
-#' @return A matrix of p values with n.meas columns and n.sims rows. Each row corresponds to a different sample, and the p values from the respective outcome measures are in distinct columns.
+#' @return A matrix of p values with n.dv columns and nsim rows. Each row corresponds to a different sample, and the p values from the respective outcome measures are in distinct columns.
 #' @keywords simulated data, multiple testing, p hacking
 #' @export
 #' @examples 
-#' many.outcome.sim(100, 3, .5, 10)
-many.outcome.sim <- function(n, n.meas, correl, n.sims){
+#' sims <- many.outcome.sim(100, nsim = 1000, n.dv = 5, correl = .4)
+#' mean(apply(sims, 1, min) < .05) #familywise error rate with no correction
+#' mean(apply(sims, 1, min) < .05/5) #familywise error rate with Bonferonni correction for 5 comparisons
+many.outcome.sim <- function(n, nsim, n.dv = 3, correl = .5){
   #A function for computing a p-value comparing the means
   #of two groups whose scores are entered in a vector.
   #Assumes an input vector with an even number of entries,
@@ -238,38 +201,34 @@ many.outcome.sim <- function(n, n.meas, correl, n.sims){
     2*pt(-abs(t.st), n.tot - 2)
   }
   #Specify a covariance matrix for mvrnorm().
-  sigma <- matrix(correl, nrow = n.meas, ncol = n.meas)
+  sigma <- matrix(correl, nrow = n.dv, ncol = n.dv)
   diag(sigma) <- 1
   #Initialize a matrix for holding p values.
-  sim.ps <- matrix(-9, nrow = n.sims, ncol = n.meas)
+  sim.ps <- matrix(-9, nrow = nsim, ncol = n.dv)
   #simulate all the necessary observations.
-  sim.dat <- MASS::mvrnorm(n.sims*n*2, mu = rep(0, n.meas), Sigma = sigma)
-  ps.mat <- matrix(NA, nrow = n.sims, ncol = n.meas)
+  sim.dat <- MASS::mvrnorm(nsim*n*2, mu = rep(0, n.dv), Sigma = sigma)
+  ps.mat <- matrix(NA, nrow = nsim, ncol = n.dv)
   #For each measurement, conduct hypothesis tests for each sample.
-  for(i in 1:n.meas){
-    test.dat <- matrix(sim.dat[,i], nrow = n.sims)
+  for(i in 1:n.dv){
+    test.dat <- matrix(sim.dat[,i], nrow = nsim)
     ps.mat[,i] <- apply(test.dat, 1, t.p)
   }
   ps.mat
 }
 
+
 #' Simulate an optional stopping p-value scenario
 #' 
-#' Simulates type I error inflation from testing a difference in group means many times as the trial is ongoing, stopping if the test is significant. A matrix of p values is returned with length(ns) columns and n.sims rows.
+#' Simulates type I error inflation from testing a difference in group means many times as the trial is ongoing, stopping if the test is significant. A matrix of p values is returned with length(ns) columns and nsim rows.
 #' @param ns A vector of numbers, each of which is a number of people per group at which the group difference should be tested.
-#' @param n.sims The number of simulated samples to run.
-#' @return A matrix of p values with length(ns) columns and n.sims rows. Each row corresponds to a different sample, and the p values resulting from tests of the nested subsamples of size specified by ns are in different columns.
+#' @param nsim The number of simulated samples to run.
+#' @return A matrix of p values with length(ns) columns and nsim rows. Each row corresponds to a different sample, and the p values resulting from tests of the nested subsamples of size specified by ns are in different columns.
 #' @keywords simulated data, p hacking
 #' @export
 #' @examples 
-#' sims <- serial.testing.sim(n.sims = 100)
+#' sims <- serial.testing.sim(nsim = 1000)
 #' mean(apply(sims, 1, min) < .05) #How often would optional stopping lead to a rejection of the null at the .05 level?
-serial.testing.sim <- function(ns = c(20, 30, 40, 50), n.sims = 10000){
-  #A function for computing a p-value comparing the means
-  #of two groups whose scores are entered in a vector.
-  #Assumes an input vector with an even number of entries,
-  #the first half of which are in one group, with the second
-  #half in a different group..
+serial.testing.sim <- function(ns = c(20, 30, 40, 50), nsim = 10000){
   t.p <- function(x){
     n.tot <- length(x)
     n.1 <- n.tot/2
@@ -279,10 +238,10 @@ serial.testing.sim <- function(ns = c(20, 30, 40, 50), n.sims = 10000){
     2*pt(-abs(t.st), n.tot - 2)
   }
   #Initialize a matrix for holding p values.
-  sim.ps <- matrix(-9, nrow = n.sims, ncol = length(ns))
+  sim.ps <- matrix(-9, nrow = nsim, ncol = length(ns))
   #simulate all the necessary observations.
-  sim.dat <- matrix(rnorm(n.sims*max(ns)*2, 0, 1), nrow = n.sims)
-  ps.mat <- matrix(NA, nrow = n.sims, ncol = length(ns))
+  sim.dat <- matrix(rnorm(nsim*max(ns)*2, 0, 1), nrow = nsim)
+  ps.mat <- matrix(NA, nrow = nsim, ncol = length(ns))
   max.n <- max(ns)
   #For each measurement, conduct hypothesis tests for each sample.
   for(i in 1:length(ns)){
@@ -296,39 +255,40 @@ serial.testing.sim <- function(ns = c(20, 30, 40, 50), n.sims = 10000){
 #' Estimate the power of a one-sample z test by simulation
 #' 
 #' Simulates nsims normal samples with expectations differing from a value specified by the null hypothesis by d (known) standard deviations. For each sample, the null hypothesis is tested by a one-sample z test, and the p value is compared with the specified significance level.
-#' @param d An effect size: the number of (known) standard deviations by which the expectation of the sampled data differs from a hypothesized expectation.
 #' @param n The size of each simulated sample.
-#' @param level The significance level of the one-sample z-test.
 #' @param nsim The number of simulated samples to run.
-#' @return The proportion of p values less than the specified level (i.e. the power).
+#' @param d An effect size: the number of (known) standard deviations by which the expectation of the sampled data differs from a hypothesized expectation.
+#' @param lev The significance level of the one-sample z-test.
+#' @return The proportion of p values less than the specified level (i.e. the estimated power).
 #' @keywords simulation, power, z test
 #' @export
 #' @examples 
-#' ps.1sz(d = 0.5, n = 20)
-ps.1sz <- function(d, n, level = 0.05, nsim = 10000){
+#' powersim.1sz(n = 20, nsim = 10000, d = .5)
+power.sim.1sz <- function(n, nsim, d, lev = 0.05){
   simmat <- matrix(rnorm(n*nsim, d, 1), nrow = nsim)
   samp.means <- rowMeans(simmat)
   neg.devs <- -abs(samp.means)
   ps <- 2*pnorm(neg.devs, 0, 1/sqrt(n))
-  mean(ps < level)
+  mean(ps < lev)
 }
 
 
 #' Simulate the winner's curse with a one-sample z-test
 #' 
 #' Simulates the "winner's curse"---the effect that especially in low-power situations, estimates that result in signficant tests for the null hypothesis of theta = 0 tend also to be overestimates. In each simulation, a single normal sample is drawn and the hypothesis that the true effect size is zero is tested(by one-sample t-test). The output is a named vector with a a true effect size (measured in number of standard deviations from the value under the null hypothesis), the "estimated" effect size, which is the mean effect size from simulations that produced significant results, and the power, which is the proportion of simulations that achieved significance. A histogram is also produced, with all the estimated effect sizes shown, and the estimates associated with significant tests colored grey.
-#' @param d The true effect size in the simulations.
 #' @param n The size of each simulated sample.
-#' @param lev The significance level of the one-sample z-test. Effect size estimates are averaged in the "estimated d" part of the output only if the one-sample z test produces a p value less than the level.
 #' @param nsim The number of simulated samples to run.
+#' @param d The true effect size in the simulations.
+#' @param lev The significance level of the one-sample z-test. Effect size estimates are averaged in the "estimated d" part of the output only if the one-sample z test produces a p value less than the level.
 #' @param abs.vals controls whether we pay attention to the sign of the estimate (if FALSE, the default, we do).
 #' @param br the breaks parameter for the histogram.
 #' @return a named vector with a a true effect size (measured in number of standard deviations from the value under the null hypothesis), the "estimated" effect size, which is the mean effect size from simulations that produced significant results, and the power, which is the proportion of simulations that achieved significance. A histogram is also produced, with all the estimated effect sizes shown, and the estimates associated with significant tests colored grey.
 #' @keywords simulation, power, z test, winner's curse
 #' @export
 #' @examples 
-#' wc.1sz(d = 0.5, n = 20, nsim = 1000)
-wc.1sz <- function(d, n, lev = 0.05, nsim = 10000, abs.vals = FALSE, br = 50){
+#' wincurse.sim.1sz(d = 0.1, n = 100, nsim = 10000)
+#' wincurse.sim.1sz(d = 0.1, n = 100, nsim = 10000, abs.vals = TRUE)
+wincurse.sim.1sz <- function(n, nsim, d, lev = 0.05, abs.vals = FALSE, br = 50){
   samps <- rnorm(n*nsim, d, 1)
   simmat <- matrix(samps, nrow = nsim)
   samp.means <- rowMeans(simmat)
@@ -348,9 +308,6 @@ wc.1sz <- function(d, n, lev = 0.05, nsim = 10000, abs.vals = FALSE, br = 50){
   plot(h, col = c("grey", "white", "grey")[cuts], xlab = "Estimated effect sizes", main = "")
   return(c("true d" = d, "estimated d" = est.d, "power" = power))
 }
-
-
-
 
 #' Draw a bootstrap sample from a matrix or vector
 #' 
@@ -402,34 +359,33 @@ perm.samp <- function(x){
 }
 
 
-
-
 #' Simulate data from a a linear model with an unobserved confounder.
 #' 
-#' Generates nsims samples of n independent pairs of observations using a linear model y = alpha + beta*x + gamma*z + disturbance where z is unobserved. x and z are jointly normally distributed, and the disturbances are also normal.
+#' Generates nsim samples of n independent pairs of observations using a linear model y = a + b1*x + b2*z + disturbance where z is unobserved. x and z are jointly normally distributed, and the disturbances are also normal.
 #' @param n The number of independent pairs of observations to generate per simulation.
-#' @param nsims The number of simulations to run.
-#' @param alpha The intercept.
-#' @param beta The slope for the observed independent variable.
-#' @param gamma The slope for the unobserved confounder.
-#' @param d.sd The standard deviation of the disturbances.
-#' @param rho The correlation of (observed) x and (unobserved) z.
+#' @param nsim The number of simulations to run.
+#' @param a The intercept.
+#' @param b1 The slope for the observed independent variable.
+#' @param b2 The slope for the unobserved confounder.
+#' @param sigma.disturb The standard deviation of the disturbances.
+#' @param correl The correlation of (observed) x and (unobserved) z.
 #' @return A list of two matrices. The first matrix contains the x values from each simulation, with one simuluation in each row. The second matrix contains the y values in the same configuration.
 #' @keywords Simulation, simple linear regression, confounding, omitted variable bias.
 #' @export
-#' @examples 
-#' sim.2var(10, 50, 3, 1/2, 1/5, 1, .5)
-sim.2var <- function(n, nsims, alpha, beta, gamma, d.sd, rho){
-  sig <- matrix(c(1, rho, rho, 1), nrow = 2)
-  ivs <- MASS::mvrnorm(n*nsims, mu = c(0,0), sig)
+#' @examples
+#' sim.2var(10, 5, a = 3, b1 = 1/2, b2 = 1/5, sigma.disturb = 1, correl = .5)
+sim.2var <- function(n, nsim, a, b1, b2 = 0, sigma.disturb = 1, correl = 0){
+  sig <- matrix(c(1, correl, correl, 1), nrow = 2)
+  ivs <- MASS::mvrnorm(n*nsim, mu = c(0,0), sig)
   x <- ivs[,1]
   z <- ivs[,2]
-  disturb <- rnorm(n*nsims, 0, d.sd)
-  y <- alpha + beta * x + gamma * z + disturb
-  xmat <- matrix(x, nrow = nsims)
-  ymat <- matrix(y, nrow = nsims)
+  disturb <- rnorm(n*nsim, 0, sigma.disturb)
+  y <- a + b1 * x + b2 * z + disturb
+  xmat <- matrix(x, nrow = nsim)
+  ymat <- matrix(y, nrow = nsim)
   list(xmat, ymat)
 }
+
 
 #' Generate a bootstrap distribution for a statistic computed on a vector.
 #' 
@@ -470,29 +426,45 @@ wrap.bm <- function(n, B, mu = 0, sigma = 1, FUN = mean, ...){
   list("boot m"= mean(boots), "boot se"= sd(boots))
 }
 
+
+
+
+
+#' @inheritParams sim.lm
+#' @param estfun A function for estimating the parameters. lm() is the default, which gives least-squares estimates. Other functions can be supplied so long as they accept the same formula-style input in the first argument and return a list that has the coefficients stored in a vector of length 2 accessible by $coef. rq() in the quantreg package is another function that works.
+#' @return A matrix with 2 columns and nsamps rows. Each row contains estimation results from a different sample, with the intercept estimate in the first column and the slope estimate in the second column.
+#' @keywords simulated data, simple linear regression
+#' @export
+#' @examples 
+#' sim.lm.ests(n = 50, nsim = 10, a = 3, b = 1/2)
+#' sim.lm.ests(n = 50, nsim = 10, a = 3, b = 1/2, estfun = rq) #if package quantreg is loaded.
+sim.lm.ests <- function(n, nsim, a, b, sigma.disturb = 1, mu.x = 8, sigma.x = 2, rdisturb = rnorm, rx = rnorm, het.coef = 0, estfun = lm){
+  ests <- matrix(nrow = nsim, ncol = 2)
+  for(i in 1:nsim){
+    dat <- sim.lm(n, a, b, sigma.disturb, mu.x, sigma.x, rdisturb, rx, het.coef)
+    ests[i,] <- estfun(dat[,2] ~ dat[,1])$coef
+  }
+  ests
+}
+
+
 #' Simulate simple linear regression data and apply a permutation test
 #' 
 #' Simulates data from a linear model using the sim.lm() function, each time applying a permutation test to test the null hypothesis that the slope is zero.
-#' @param a The intercept parameter of the linear regression model to be simulated.
-#' @param b The slope parameter of the linear regression model to be simulated.
-#' @param n.perm The number of permutations to use per simulation to conduct the permutation test.
-#' @param n.sim The number of simulations to conduct.
-#' @param var.eps The variance of the disturbances in the model y = a + b*x + disturbance.
-#' @param n The numer of independent pairs of observations to simulate per sample.
-#' @param mu.x The expectation of the x values.
-#' @param var.x The variance of the x values.
-#' @param rdist A function for drawing the random disturbances. rnorm() is the default, which makes the disturbances normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.
-#' @param rx A function for drawing the random x values. rnorm() is the default, which makes x normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.
+#' @inheritParams sim.lm 
+#' @param nsim The number of simulations to conduct.
+#' @param nperm The number of permutations to use per simulation to conduct the permutation test.
 #' @return A vector of p values of length nsims, one from each permutation test of the hypothesis that the slope is zero.
 #' @keywords simulated data, simple linear regression, permutation test
 #' @export
 #' @examples 
-#' sim.perm.B(3, .1, n.sim = 20)
-sim.perm.B <- function(a, b, n.perm = 500, n.sim = 500, var.eps = 1, 
-                           n = 50, mu.x = 8, var.x = 4, rdist = rnorm, rx = rnorm){
+#' ps <- sim.perm.B(10, 200, a = 3, b = .1, nperm = 200)
+#' mean(ps < .05) #power at .05 significance level
+sim.perm.B <- function(n, nsim, a, b, nperm = 500, sigma.disturb = 1, 
+                           mu.x = 8, sigma.x = 4, rdisturb = rnorm, rx = rnorm, het.coef = 0){
   #This version differs from the one in the text and is about twice as fast.
   #simulate all data
-  dat <- sim.lm(a, b, var.eps, n*n.sim, mu.x, var.x, rdist = rdist, rx = rx)[sample(1:(n*n.sim)),]
+  dat <- sim.lm(n*nsim, a, b, sigma.disturb, mu.x, sigma.x, rdisturb, rx, het.coef)[sample(1:(n*nsim)),]
   #reorganize for beta.mm.vec
   xs <- matrix(dat[,1], nrow = n)
   ys <- matrix(dat[,2], nrow = n)
@@ -512,8 +484,8 @@ sim.perm.B <- function(a, b, n.perm = 500, n.sim = 500, var.eps = 1,
     n <- length(x)/2
     c(x[1:n], sample(x[(n+1):(2*n)]))
   }
-  perm.dists <- matrix(nrow = n.perm, ncol = n.sim)
-  for(i in 1:n.perm){
+  perm.dists <- matrix(nrow = nperm, ncol = nsim)
+  for(i in 1:nperm){
     perm.all <- apply(dat.all, 2, perm.second.half)
     perm.dists[i,] <- apply(perm.all, 2, beta.mm.vec)
   }
@@ -526,34 +498,25 @@ sim.perm.B <- function(a, b, n.perm = 500, n.sim = 500, var.eps = 1,
 }
 
 
-
 #' Simulate simple linear regression data and apply a Wald test
 #' 
 #' Simulates data from a linear model using the sim.lm() function, each time applying a Wald test test the null hypothesis that the slope = B0.
-#' @param a The intercept parameter of the linear regression model to be simulated.
-#' @param b The slope parameter of the linear regression model to be simulated.
+#' @inheritParams sim.perm.B
 #' @param B0 The value of the slope under the null hypothesis to be tested.
-#' @param n.sim The number of simulations to conduct.
-#' @param var.eps The variance of the disturbances in the model y = a + b*x + disturbance.
-#' @param n The numer of independent pairs of observations to simulate per sample.
-#' @param mu.x The expectation of the x values.
-#' @param var.x The variance of the x values.
-#' @param rdist A function for drawing the random disturbances. rnorm() is the default, which makes the disturbances normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.
-#' @param rx A function for drawing the random x values. rnorm() is the default, which makes x normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.
 #' @param pfun A cumulative distribution function to which to compare the Wald statistic.
 #' @param ... Additional arguments to pfun
 #' @return A vector of p values of length nsims, one from each Wald test.
 #' @keywords simulated data, simple linear regression, Wald
 #' @export
 #' @examples 
-#' sim.Wald.B(3, .1, n.sim = 20)
-sim.Wald.B <- function(a, b, B0 = 0, n.sim = 1000, var.eps = 1, n = 50, 
-                       mu.x = 8, var.x = 4, rdist = rnorm, rx = rnorm, pfun = pnorm, ...){
+#' sim.Wald.B(10, 100, 3, .1)
+sim.Wald.B <- function(n, nsim, a, b, B0 = 0, sigma.disturb = 1, 
+                       mu.x = 8, sigma.x = 4, rdisturb = rnorm, rx = rnorm, het.coef = 0, pfun = pnorm, ...){
   #Initialize variables.
-  ps <- numeric(n.sim)
-  for(i in 1:n.sim){
+  ps <- numeric(nsim)
+  for(i in 1:nsim){
     #Simulate data and compute p value.
-    dat <- sim.lm(a, b, var.eps, n, mu.x, var.x, rdist = rdist, rx = rx)    
+    dat <- sim.lm(n, a, b, sigma.disturb, mu.x, sigma.x, rdisturb, rx, het.coef)    
     x <- dat[,1]
     y <- dat[,2]
     #compute MLEs of beta and alpha
@@ -567,7 +530,7 @@ sim.Wald.B <- function(a, b, B0 = 0, n.sim = 1000, var.eps = 1, n = 50,
     ps[i] <- 2*pfun(-abs(wald), ...)
   }
   #Return the p values
-  return(ps)
+  ps
 }
 
 
@@ -597,23 +560,23 @@ post.conj.norm.norm <- function(z, known.sd, prior.mean, prior.sd){
 #' Given a sample of data from a normal distribution with known variance / standard deviation, and a normal prior for the expectation of the data, draw samples from the posterior by rejection sampling.
 #' @param z A numeric vector (assumed to be drawn from a normal distribution with known variance / standard deviation)
 #' @param known.sd The known standard deviation of the data distribution.
-#' @param prior.mn The expectation of the normal prior.
+#' @param prior.mean The expectation of the normal prior.
 #' @param prior.sd The standard devation of the normal prior.
 #' @param nsamps The number of observations to draw from the posterior by rejection sampling.
 #' @return A numeric vector of length nsamps containing simulated data from the posterior distribution.
 #' @keywords Rejection sampling, normal, posterior.
 #' @export
 #' @examples 
-#' reject.samp.norm(rnorm(100), 1, 2, 4)
-reject.samp.norm <- function(z, known.sd = 1, prior.mn = 0, prior.sd = 1, nsamps = 10000){
+#' reject.samp.norm(rnorm(100), 1, 2, 4, nsamps = 50)
+reject.samp.norm <- function(z, known.sd = 1, prior.mean = 0, prior.sd = 1, nsamps = 10000){
   #Get 1 sample under rejection sampling from normal with known sd.
   #Prior is a normal.
   #z is a vector of data.
-  get.1.samp.norm <- function(z, known.sd = 1, prior.mn = 0, prior.sd = 1){
+  get.1.samp.norm <- function(z, known.sd = 1, prior.mean = 0, prior.sd = 1){
     accepted <- FALSE
     max.like <- exp(sum(log(dnorm(z, mean = mean(z), sd = known.sd))))
     while(accepted == FALSE){
-      cand <- rnorm(1, prior.mn, prior.sd)
+      cand <- rnorm(1, prior.mean, prior.sd)
       like <- exp(sum(log(dnorm(z, mean = cand, sd = known.sd))))
       crit <- like / max.like
       xunif <- runif(1,0,1)
@@ -623,8 +586,9 @@ reject.samp.norm <- function(z, known.sd = 1, prior.mn = 0, prior.sd = 1, nsamps
   }
   samps <- numeric(nsamps)
   for(i in seq_along(samps)){
-    samps[i] <- get.1.samp.norm(z, known.sd, prior.mn, prior.sd)
+    samps[i] <- get.1.samp.norm(z, known.sd, prior.mean, prior.sd)
   }
   samps
 }
+
 

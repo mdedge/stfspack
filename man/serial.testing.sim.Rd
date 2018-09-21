@@ -4,21 +4,21 @@
 \alias{serial.testing.sim}
 \title{Simulate an optional stopping p-value scenario}
 \usage{
-serial.testing.sim(ns = c(20, 30, 40, 50), n.sims = 10000)
+serial.testing.sim(ns = c(20, 30, 40, 50), nsim = 10000)
 }
 \arguments{
 \item{ns}{A vector of numbers, each of which is a number of people per group at which the group difference should be tested.}
 
-\item{n.sims}{The number of simulated samples to run.}
+\item{nsim}{The number of simulated samples to run.}
 }
 \value{
-A matrix of p values with length(ns) columns and n.sims rows. Each row corresponds to a different sample, and the p values resulting from tests of the nested subsamples of size specified by ns are in different columns.
+A matrix of p values with length(ns) columns and nsim rows. Each row corresponds to a different sample, and the p values resulting from tests of the nested subsamples of size specified by ns are in different columns.
 }
 \description{
-Simulates type I error inflation from testing a difference in group means many times as the trial is ongoing, stopping if the test is significant. A matrix of p values is returned with length(ns) columns and n.sims rows.
+Simulates type I error inflation from testing a difference in group means many times as the trial is ongoing, stopping if the test is significant. A matrix of p values is returned with length(ns) columns and nsim rows.
 }
 \examples{
-sims <- serial.testing.sim(n.sims = 100)
+sims <- serial.testing.sim(nsim = 1000)
 mean(apply(sims, 1, min) < .05) #How often would optional stopping lead to a rejection of the null at the .05 level?
 }
 \keyword{data,}

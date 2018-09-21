@@ -4,20 +4,20 @@
 \alias{rlaplace}
 \title{Sample from a Laplace (also called double-exponential) distribution}
 \usage{
-rlaplace(n, mean = 0, sd = 1)
+rlaplace(n, mu = 0, sigma = 1)
 }
 \arguments{
 \item{n}{The number of independent observations to draw (i.e. sample size).}
 
-\item{mean}{The expectation of the Laplace distribution.}
+\item{mu}{The expectation of the Laplace distribution.}
 
-\item{sd}{The standard deviation of the Laplace distribution.}
+\item{sigma}{The standard deviation of the Laplace distribution.}
 }
 \value{
 A vector of Laplace-distributed random numbers of length n.
 }
 \description{
-Simulates a sample of Laplace-distributed data.
+Simulates a sample of Laplace-distributed data. Note that there are other rlaplace() functions (such as in the rmutil package), but their parameters may differ from this one, which uses the expectation and standard deviation (analogous to rnorm()).
 }
 \examples{
 rlaplace(10, 0, 1)

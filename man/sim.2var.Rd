@@ -4,31 +4,31 @@
 \alias{sim.2var}
 \title{Simulate data from a a linear model with an unobserved confounder.}
 \usage{
-sim.2var(n, nsims, alpha, beta, gamma, d.sd, rho)
+sim.2var(n, nsim, a, b1, b2 = 0, sigma.disturb = 1, correl = 0)
 }
 \arguments{
 \item{n}{The number of independent pairs of observations to generate per simulation.}
 
-\item{nsims}{The number of simulations to run.}
+\item{nsim}{The number of simulations to run.}
 
-\item{alpha}{The intercept.}
+\item{a}{The intercept.}
 
-\item{beta}{The slope for the observed independent variable.}
+\item{b1}{The slope for the observed independent variable.}
 
-\item{gamma}{The slope for the unobserved confounder.}
+\item{b2}{The slope for the unobserved confounder.}
 
-\item{d.sd}{The standard deviation of the disturbances.}
+\item{sigma.disturb}{The standard deviation of the disturbances.}
 
-\item{rho}{The correlation of (observed) x and (unobserved) z.}
+\item{correl}{The correlation of (observed) x and (unobserved) z.}
 }
 \value{
-A list of two matrices, each with nsims rows and n columns. The first matrix contains the x values from each simulation, with one simuluation in each row. The second matrix contains the y values in the same configuration.
+A list of two matrices. The first matrix contains the x values from each simulation, with one simuluation in each row. The second matrix contains the y values in the same configuration.
 }
 \description{
-Generates nsims samples of n independent pairs of observations using a linear model y = alpha + beta*x + gamma*z + disturbance where z is unobserved. x and z are jointly normally distributed, and the disturbances are also normal.
+Generates nsim samples of n independent pairs of observations using a linear model y = a + b1*x + b2*z + disturbance where z is unobserved. x and z are jointly normally distributed, and the disturbances are also normal.
 }
 \examples{
-sim.2var(10, 50, 3, 1/2, 1/5, 1, .5)
+sim.2var(10, 5, a = 3, b1 = 1/2, b2 = 1/5, sigma.disturb = 1, correl = .5)
 }
 \keyword{Simulation,}
 \keyword{bias.}

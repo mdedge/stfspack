@@ -20,7 +20,7 @@ A vector of Pareto-distributed random numbers of length n.
 Simulates a sample of Pareto-distributed data.
 }
 \examples{
-rpareto(100, 0.5, 1)
+rpareto(50, 0.5, 1)
 }
 \keyword{Pareto}
 \keyword{data,}

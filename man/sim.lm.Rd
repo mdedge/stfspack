@@ -4,25 +4,27 @@
 \alias{sim.lm}
 \title{Simulate data from a simple linear model.}
 \usage{
-sim.lm(a, b, var.eps = 1, n = 50, mu.x = 8, var.x = 4,
-  rx = rnorm, rdist = rnorm)
+sim.lm(n, a, b, sigma.disturb = 1, mu.x = 8, sigma.x = 2,
+  rdisturb = rnorm, rx = rnorm, het.coef = 0)
 }
 \arguments{
+\item{n}{The number of pairs of observations to simulate.}
+
 \item{a}{The intercept parameter of the linear regression model to be simulated.}
 
 \item{b}{The slope parameter of the linear regression model to be simulated.}
 
-\item{var.eps}{The variance of the disturbances in the model y = a + b*x + disturbance.}
-
-\item{n}{The number of pairs of observations to simulate.}
+\item{sigma.disturb}{The variance of the disturbances in the model y = a + b*x + disturbance.}
 
 \item{mu.x}{The expectation of the x values.}
 
-\item{var.x}{The variance of the x values.}
+\item{sigma.x}{The variance of the x values.}
+
+\item{rdisturb}{A function for drawing the random disturbances. rnorm() is the default, which makes the disturbances normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.}
 
 \item{rx}{A function for drawing the random x values. rnorm() is the default, which makes x normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.}
 
-\item{rdist}{A function for drawing the random disturbances. rnorm() is the default, which makes the disturbances normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.}
+\item{het.coef}{A number introducing some heteroscedasticity (i.e. non-constant variance) to the disturbances. If het.coef = 0 (the default), then the disturbances have constant variance. If it is positive, then the standard deviation of the disturbances increases with x; if negative, then the standard deviation of the disturbances decreases with x.}
 }
 \value{
 A matrix with n rows, x in the first column and y in the second column. The output matrix is sorted by the x values, with the lowest x value in the first row.
@@ -31,7 +33,10 @@ A matrix with n rows, x in the first column and y in the second column. The outp
 Generates one set of n independent pairs of observations using a simple linear model (y = a + b*x + disturbance) with intercept a, slope b, and (by default) normally distributed disturbances. The output is a matrix with x in the first column and y in the second column. The output matrix is sorted by the x values, with the lowest x value in the first row.
 }
 \examples{
-sim.lm(a = 3, b = 1/2, n = 11)
+sim.lm(n = 11, a = 3, b = 1/2)
+plot(sim.lm(1000, 3, 1/2))
+plot(sim.lm(1000, 3, 1/2, rdisturb = rlaplace))
+plot(sim.lm(1000, 3, 1/2, het.coef = .2))
 }
 \keyword{Simulation,}
 \keyword{linear}

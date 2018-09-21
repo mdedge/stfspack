@@ -4,7 +4,7 @@
 \alias{reject.samp.norm}
 \title{Perform rejection sampling for normally distributed data with a normal prior on the expectation.}
 \usage{
-reject.samp.norm(z, known.sd = 1, prior.mn = 0, prior.sd = 1,
+reject.samp.norm(z, known.sd = 1, prior.mean = 0, prior.sd = 1,
   nsamps = 10000)
 }
 \arguments{
@@ -12,7 +12,7 @@ reject.samp.norm(z, known.sd = 1, prior.mn = 0, prior.sd = 1,
 
 \item{known.sd}{The known standard deviation of the data distribution.}
 
-\item{prior.mn}{The expectation of the normal prior.}
+\item{prior.mean}{The expectation of the normal prior.}
 
 \item{prior.sd}{The standard devation of the normal prior.}
 
@@ -25,7 +25,7 @@ A numeric vector of length nsamps containing simulated data from the posterior d
 Given a sample of data from a normal distribution with known variance / standard deviation, and a normal prior for the expectation of the data, draw samples from the posterior by rejection sampling.
 }
 \examples{
-reject.samp.norm(rnorm(100), 1, 2, 4)
+reject.samp.norm(rnorm(100), 1, 2, 4, nsamps = 50)
 }
 \keyword{Rejection}
 \keyword{normal,}

@@ -4,39 +4,50 @@
 \alias{sim.lm.ests}
 \title{Simulate data from a linear model and estimate the parameters.}
 \usage{
-sim.lm.ests(nsims, n = 50, a = 0, b = 0, var.eps = 1, mu.x = 0,
-  var.x = 1, rx = rnorm, rdist = rnorm, estfun = lm)
+sim.lm.ests(n, nsim, a, b, sigma.disturb = 1, mu.x = 8, sigma.x = 2,
+  rdisturb = rnorm, rx = rnorm, het.coef = 0, estfun = lm)
+
+sim.lm.ests(n, nsim, a, b, sigma.disturb = 1, mu.x = 8, sigma.x = 2,
+  rdisturb = rnorm, rx = rnorm, het.coef = 0, estfun = lm)
 }
 \arguments{
-\item{nsims}{The number of samples to simulate.}
+\item{n}{The number of pairs of observations to simulate.}
 
-\item{n}{The number of pairs of observations to simulate per sample.}
+\item{nsim}{The number of samples to simulate.}
 
 \item{a}{The intercept parameter of the linear regression model to be simulated.}
 
 \item{b}{The slope parameter of the linear regression model to be simulated.}
 
-\item{var.eps}{The variance of the disturbances in the model y = a + b*x + disturbance.}
+\item{sigma.disturb}{The variance of the disturbances in the model y = a + b*x + disturbance.}
 
 \item{mu.x}{The expectation of the x values.}
 
-\item{var.x}{The variance of the x values.}
+\item{sigma.x}{The variance of the x values.}
+
+\item{rdisturb}{A function for drawing the random disturbances. rnorm() is the default, which makes the disturbances normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.}
 
 \item{rx}{A function for drawing the random x values. rnorm() is the default, which makes x normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.}
 
-\item{rdist}{A function for drawing the random disturbances. rnorm() is the default, which makes the disturbances normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.}
+\item{het.coef}{A number introducing some heteroscedasticity (i.e. non-constant variance) to the disturbances. If het.coef = 0 (the default), then the disturbances have constant variance. If it is positive, then the standard deviation of the disturbances increases with x; if negative, then the standard deviation of the disturbances decreases with x.}
+
+\item{estfun}{A function for estimating the parameters. lm() is the default, which gives least-squares estimates. Other functions can be supplied so long as they accept the same formula-style input in the first argument and return a list that has the coefficients stored in a vector of length 2 accessible by $coef. rq() in the quantreg package is another function that works.}
 
 \item{estfun}{A function for estimating the parameters. lm() is the default, which gives least-squares estimates. Other functions can be supplied so long as they accept the same formula-style input in the first argument and return a list that has the coefficients stored in a vector of length 2 accessible by $coef. rq() in the quantreg package is another function that works.}
 }
 \value{
+A matrix with 2 columns and nsamps rows. Each row contains estimation results from a different sample, with the intercept estimate in the first column and the slope estimate in the second column.
+
 A matrix with 2 columns and nsamps rows. Each row contains estimation results from a different sample, with the intercept estimate in the first column and the slope estimate in the second column.
 }
 \description{
 Simulates data from a linear model using the sim.lm() function, each time estimating the parameters using a user-supplied function.
 }
 \examples{
-sim.lm.ests(10)
-sim.lm.ests(10, estfun = rq) #if package quantreg is loaded.
+sim.lm.ests(n = 50, nsim = 10, a = 3, b = 1/2)
+sim.lm.ests(n = 50, nsim = 10, a = 3, b = 1/2, estfun = rq) #if package quantreg is loaded.
+sim.lm.ests(n = 50, nsim = 10, a = 3, b = 1/2)
+sim.lm.ests(n = 50, nsim = 10, a = 3, b = 1/2, estfun = rq) #if package quantreg is loaded.
 }
 \keyword{data,}
 \keyword{linear}

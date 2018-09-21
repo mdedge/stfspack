@@ -4,16 +4,16 @@
 \alias{compare.tail.to.normal}
 \title{Compare tails of a sample to normal expectation.}
 \usage{
-compare.tail.to.normal(x, k, expec, st.d)
+compare.tail.to.normal(x, k, mu, sigma)
 }
 \arguments{
 \item{x}{A numeric vector}
 
 \item{k}{The number of standard deviations beyond which is considered the "tail" (for the purpose of the computation)}
 
-\item{expec}{The expectation of a normal distribution to which x will be compared}
+\item{mu}{The expectation of a normal distribution to which x will be compared}
 
-\item{st.d}{The standard deviation of a normal distribution to which x will be compared}
+\item{sigma}{The standard deviation of a normal distribution to which x will be compared}
 }
 \value{
 A ratio of the proportion of data beyond k standard deviations from the expectation divided by the Normal-theory probability of observations beyond k standard deviations from the expectation.
@@ -23,6 +23,7 @@ Compares the proportion of observations in a vector beyond k standard deviations
 }
 \examples{
 compare.tail.to.normal(rnorm(10000, 0, 1), 3, 0, 1)
+compare.tail.to.normal(rt(10000, 2), 3, 0, 1)
 }
 \keyword{central}
 \keyword{extreme}

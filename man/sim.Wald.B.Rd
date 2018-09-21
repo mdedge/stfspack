@@ -4,30 +4,32 @@
 \alias{sim.Wald.B}
 \title{Simulate simple linear regression data and apply a Wald test}
 \usage{
-sim.Wald.B(a, b, B0 = 0, n.sim = 1000, var.eps = 1, n = 50,
-  mu.x = 8, var.x = 4, rdist = rnorm, rx = rnorm, pfun = pnorm,
-  ...)
+sim.Wald.B(n, nsim, a, b, B0 = 0, sigma.disturb = 1, mu.x = 8,
+  sigma.x = 4, rdisturb = rnorm, rx = rnorm, het.coef = 0,
+  pfun = pnorm, ...)
 }
 \arguments{
+\item{n}{The number of pairs of observations to simulate.}
+
+\item{nsim}{The number of simulations to conduct.}
+
 \item{a}{The intercept parameter of the linear regression model to be simulated.}
 
 \item{b}{The slope parameter of the linear regression model to be simulated.}
 
 \item{B0}{The value of the slope under the null hypothesis to be tested.}
 
-\item{n.sim}{The number of simulations to conduct.}
-
-\item{var.eps}{The variance of the disturbances in the model y = a + b*x + disturbance.}
-
-\item{n}{The numer of independent pairs of observations to simulate per sample.}
+\item{sigma.disturb}{The variance of the disturbances in the model y = a + b*x + disturbance.}
 
 \item{mu.x}{The expectation of the x values.}
 
-\item{var.x}{The variance of the x values.}
+\item{sigma.x}{The variance of the x values.}
 
-\item{rdist}{A function for drawing the random disturbances. rnorm() is the default, which makes the disturbances normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.}
+\item{rdisturb}{A function for drawing the random disturbances. rnorm() is the default, which makes the disturbances normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.}
 
 \item{rx}{A function for drawing the random x values. rnorm() is the default, which makes x normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.}
+
+\item{het.coef}{A number introducing some heteroscedasticity (i.e. non-constant variance) to the disturbances. If het.coef = 0 (the default), then the disturbances have constant variance. If it is positive, then the standard deviation of the disturbances increases with x; if negative, then the standard deviation of the disturbances decreases with x.}
 
 \item{pfun}{A cumulative distribution function to which to compare the Wald statistic.}
 
@@ -40,7 +42,7 @@ A vector of p values of length nsims, one from each Wald test.
 Simulates data from a linear model using the sim.lm() function, each time applying a Wald test test the null hypothesis that the slope = B0.
 }
 \examples{
-sim.Wald.B(3, .1, n.sim = 20)
+sim.Wald.B(10, 100, 3, .1)
 }
 \keyword{Wald}
 \keyword{data,}

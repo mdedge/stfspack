@@ -4,29 +4,31 @@
 \alias{sim.perm.B}
 \title{Simulate simple linear regression data and apply a permutation test}
 \usage{
-sim.perm.B(a, b, n.perm = 500, n.sim = 500, var.eps = 1, n = 50,
-  mu.x = 8, var.x = 4, rdist = rnorm, rx = rnorm)
+sim.perm.B(n, nsim, a, b, nperm = 500, sigma.disturb = 1, mu.x = 8,
+  sigma.x = 4, rdisturb = rnorm, rx = rnorm, het.coef = 0)
 }
 \arguments{
+\item{n}{The number of pairs of observations to simulate.}
+
+\item{nsim}{The number of simulations to conduct.}
+
 \item{a}{The intercept parameter of the linear regression model to be simulated.}
 
 \item{b}{The slope parameter of the linear regression model to be simulated.}
 
-\item{n.perm}{The number of permutations to use per simulation to conduct the permutation test.}
+\item{nperm}{The number of permutations to use per simulation to conduct the permutation test.}
 
-\item{n.sim}{The number of simulations to conduct.}
-
-\item{var.eps}{The variance of the disturbances in the model y = a + b*x + disturbance.}
-
-\item{n}{The numer of independent pairs of observations to simulate per sample.}
+\item{sigma.disturb}{The variance of the disturbances in the model y = a + b*x + disturbance.}
 
 \item{mu.x}{The expectation of the x values.}
 
-\item{var.x}{The variance of the x values.}
+\item{sigma.x}{The variance of the x values.}
 
-\item{rdist}{A function for drawing the random disturbances. rnorm() is the default, which makes the disturbances normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.}
+\item{rdisturb}{A function for drawing the random disturbances. rnorm() is the default, which makes the disturbances normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.}
 
 \item{rx}{A function for drawing the random x values. rnorm() is the default, which makes x normally distributed, but you can use any function for random number generation with first argument the sample size, second argument the expectation, and third argument the standard deviation.}
+
+\item{het.coef}{A number introducing some heteroscedasticity (i.e. non-constant variance) to the disturbances. If het.coef = 0 (the default), then the disturbances have constant variance. If it is positive, then the standard deviation of the disturbances increases with x; if negative, then the standard deviation of the disturbances decreases with x.}
 }
 \value{
 A vector of p values of length nsims, one from each permutation test of the hypothesis that the slope is zero.
@@ -35,7 +37,8 @@ A vector of p values of length nsims, one from each permutation test of the hypo
 Simulates data from a linear model using the sim.lm() function, each time applying a permutation test to test the null hypothesis that the slope is zero.
 }
 \examples{
-sim.perm.B(3, .1, n.sim = 20)
+ps <- sim.perm.B(10, 200, a = 3, b = .1, nperm = 200)
+mean(ps < .05) #power at .05 significance level
 }
 \keyword{data,}
 \keyword{linear}

@@ -4,16 +4,19 @@
 \alias{dosm.beta.hist}
 \title{Simulate and plot the distribution of the sample mean}
 \usage{
-dosm.beta.hist(samp.size, n.samps, shape1 = 1, shape2 = 1, ...)
+dosm.beta.hist(n, nsim, shape1 = 1, shape2 = 1, ...)
 }
 \arguments{
-\item{samp.size}{The size of each simulated sample.}
+\item{n}{The size of each simulated sample.}
 
-\item{n.samps}{The number of samples to simulate.}
+\item{nsim}{The number of samples to simulate.}
 
 \item{shape1}{The first parameter of the beta distribution from which the samples will be drawn.}
 
 \item{shape2}{The second parameter of the beta distribution.}
+}
+\value{
+A named vector with the mean, standard deviation, and variance of the distribution of sample means. Also plots a histogram of the distribution of sample means with an approximating normal distribution overlaid.
 }
 \description{
 Simulates a specified number of samples of a specified size from the beta distribution and plots the distribution of sample means with the density of an approximating normal distribution overlaid.
